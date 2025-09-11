@@ -69,7 +69,7 @@ async function loadPosts () {
     try {
     const raw = await api('/posts')
         // Chuẩn hóa id -> chuỗi, thêm _sortId để sắp xếp
-        state.posts = raw.map(p => {
+    state.posts = raw.map(p => {
             const idStr = String(p.id)
             const isNumeric = /^\d+$/.test(idStr)
             return { ...p, id: idStr, _sortId: isNumeric ? Number(idStr) : Number.MAX_SAFE_INTEGER }
@@ -84,11 +84,13 @@ async function loadPosts () {
 }
 
 function applyFilter (keyword) {
+    // Ẩn các post đã soft-delete (isDelete === false)
+    const active = state.posts.filter(p => p.isDelete !== false)
     if (!keyword) {
-        state.filtered = [...state.posts]
+        state.filtered = [...active]
     } else {
         const lower = keyword.toLowerCase()
-        state.filtered = state.posts.filter(p => p.title.toLowerCase().includes(lower))
+        state.filtered = active.filter(p => (p.title || '').toLowerCase().includes(lower))
     }
     countInfo.textContent = state.filtered.length + ' / ' + state.posts.length + ' bài viết'
 }
@@ -151,12 +153,14 @@ postForm?.addEventListener('submit', async e => {
     try {
         if (id) {
             // Update
-            await api(`/posts/${encodeURIComponent(id)}`, { method: 'PUT', body: payload })
+            // Preserve existing isDelete state
+            const existing = state.posts.find(p => p.id === id)
+            await api(`/posts/${encodeURIComponent(id)}`, { method: 'PUT', body: { ...payload, isDelete: existing?.isDelete !== false } })
             showActionMessage('Đã cập nhật!', false)
         } else {
             // Create with manual incremental id (max numeric + 1)
             const nextId = getNextPostIdStr()
-            const createPayload = { id: nextId, ...payload }
+            const createPayload = { id: nextId, ...payload, isDelete: true }
             await api('/posts', { method: 'POST', body: createPayload })
             showActionMessage('Đã tạo bài viết!', false)
             resetForm()
@@ -173,18 +177,24 @@ deleteBtn?.addEventListener('click', async () => {
     if (!confirm('Xóa bài viết #' + id + '?')) return
     try {
         // Pre-check existence to give clearer feedback
+        // Thay vì xóa hẳn, thực hiện soft delete: đặt isDelete = false
+        let target
         try {
-            await api(`/posts/${encodeURIComponent(id)}`)
+            target = await api(`/posts/${encodeURIComponent(id)}`)
         } catch (e) {
             if (String(e.message).includes('404')) {
-            showActionMessage(`Không tìm thấy bài viết #${id} (có thể đã bị xóa trước đó). Làm mới danh sách...`, true)
-            await loadPosts()
-            return
+                showActionMessage(`Không tìm thấy bài viết #${id}. Làm mới danh sách...`, true)
+                await loadPosts()
+                return
             }
             throw e
         }
-        await api(`/posts/${encodeURIComponent(id)}`, { method: 'DELETE' })
-        showActionMessage('Đã xóa!', false)
+        if (target.isDelete === false) {
+            showActionMessage('Bài viết đã ở trạng thái đã xóa.', true)
+            return
+        }
+        await api(`/posts/${encodeURIComponent(id)}`, { method: 'PUT', body: { ...target, isDelete: false } })
+        showActionMessage('Đã ẩn (soft delete) bài viết!', false)
         resetForm()
         if (String(state.selectedPostId) === String(id)) {
             state.selectedPostId = null
