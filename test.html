@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Posts Demo</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <h1>Danh sách bài viết</h1>
+    <div class="toolbar">
+        <input id="searchInput" type="text" placeholder="Tìm kiếm tiêu đề..." />
+        <button id="reloadBtn">Tải lại</button>
+        <span id="countInfo"></span>
+    </div>
+            <section class="panel mb-24" id="crudPanel" aria-labelledby="crudTitle">
+            <h2 id="crudTitle" class="panel-title">Thêm / Sửa bài viết</h2>
+            <form id="postForm" autocomplete="off">
+                <input type="hidden" id="postId" />
+                <div class="form-row">
+                    <label for="titleInput">Tiêu đề *</label>
+                    <input id="titleInput" type="text" required placeholder="Nhập tiêu đề" />
+                </div>
+                <div class="form-row">
+                    <label for="viewsInput">Lượt xem</label>
+                    <input id="viewsInput" type="number" min="0" step="1" value="0" />
+                </div>
+                <div class="form-actions">
+                    <button type="submit" id="saveBtn">Lưu</button>
+                    <button type="button" id="resetBtn" class="secondary">Mới</button>
+                    <button type="button" id="deleteBtn" class="danger" disabled>Xóa</button>
+                </div>
+                <div id="actionMsg" class="action-msg" aria-live="polite"></div>
+            </form>
+        </section>
+    <div id="loading" hidden>Đang tải dữ liệu...</div>
+    <div id="error" hidden></div>
+    <div class="layout">
+            <div class="panel">
+                <table aria-describedby="countInfo">
+                    <caption class="tbl-caption">Danh sách bài viết</caption>
+                    <thead>
+                        <tr>
+                            <th class="id-col" scope="col">ID</th>
+                            <th scope="col">Title</th>
+                            <th class="views-col" scope="col">Views</th>
+                        </tr>
+                    </thead>
+                    <tbody id="postsBody" aria-live="polite">
+                    </tbody>
+                </table>
+            </div>
+            <div class="panel" id="commentsPanel">
+                <h2 class="panel-title">Bình luận</h2>
+            <div id="commentsEmpty">Chọn một bài viết để xem bình luận...</div>
+            <ul id="commentsList" class="comments-list"></ul>
+        </div>
+    </div>
+
+    <footer>
+        Demo nhỏ sử dụng JSON Server (http://localhost:3000) - Chỉnh sửa trong <code>main.js</code> để mở rộng.
+    </footer>
+    <script src="main.js" defer></script>
+</body>
+</html>
+
