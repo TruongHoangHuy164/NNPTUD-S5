@@ -15,7 +15,7 @@ let schema = new mongoose.Schema({
         default: "good product"
     },
     category:{
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'category',
         required: true
     }
