@@ -15,7 +15,8 @@ let schema = new mongoose.Schema({
         default: "good product"
     },
     category:{
-        type:String,
+        type: Schema.Types.ObjectId,
+        ref: 'category',
         required: true
     }
     ,
